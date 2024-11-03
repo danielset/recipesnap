@@ -32,6 +32,8 @@ const AddRecipePage = () => {
   const [extractImage, setExtractImage] = useState<File | null>(null)
   const [isConverting, setIsConverting] = useState(false)
   const [imageSourceUrl, setImageSourceUrl] = useState<string | null>(null)
+  const [mealType, setMealType] = useState('')
+  const [cuisine, setCuisine] = useState('')
   const router = useRouter()
   const { toast } = useToast()
 
@@ -135,7 +137,9 @@ const AddRecipePage = () => {
             steps: stepsArray,
             user_id: user.id,
             image_url: imageUrl,
-            image_source_url: imageSourceUrl
+            image_source_url: imageSourceUrl,
+            meal_type: mealType,
+            cuisine: cuisine
           }
         ])
         .select()
@@ -183,6 +187,8 @@ const AddRecipePage = () => {
       setDescription(data.description || '')
       setIngredients(data.ingredients?.join('\n') || '')
       setSteps(data.steps?.join('\n') || '')
+      setMealType(data.meal_type || '')
+      setCuisine(data.cuisine || '')
       
       if (data.image_url) {
         setImagePreview(data.image_url)
@@ -234,6 +240,8 @@ const AddRecipePage = () => {
       setDescription(data.description || '')
       setIngredients(data.ingredients?.join('\n') || '')
       setSteps(data.steps?.join('\n') || '')
+      setMealType(data.meal_type || '')
+      setCuisine(data.cuisine || '')
       
       if (data.image_url) {
         setImagePreview(data.image_url)
@@ -425,6 +433,30 @@ const AddRecipePage = () => {
             required
             disabled={isSubmitting}
             className="min-h-[150px] w-full"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="meal-type">Meal Type</Label>
+          <Input
+            id="meal-type"
+            value={mealType}
+            onChange={(e) => setMealType(e.target.value)}
+            placeholder="e.g., Breakfast, Lunch, Dinner, Snack"
+            disabled={isSubmitting}
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="cuisine">Cuisine</Label>
+          <Input
+            id="cuisine"
+            value={cuisine}
+            onChange={(e) => setCuisine(e.target.value)}
+            placeholder="e.g., Italian, Mexican, Japanese"
+            disabled={isSubmitting}
+            className="w-full"
           />
         </div>
 

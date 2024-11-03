@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           messages: [
             {
               role: "system",
-              content: "You are a helpful assistant that extracts recipe information from URLs. Return the data in a consistent JSON format. When ingredients use US imperial measurements (cups, ounces, pounds, etc.), add metric conversions in parentheses at the end of each ingredient (e.g., '1 cup flour (120g)', '1 lb beef (454g)'). Keep the language the same as the original recipe."
+              content: "You are a helpful assistant that extracts recipe information from URLs. Return the data in a consistent JSON format. When ingredients use US imperial measurements (cups, ounces, pounds, etc.), add metric conversions in parentheses at the end of each ingredient (e.g., '1 cup flour (120g)', '1 lb beef (454g)'). Include meal_type and cuisine fields in your response. Keep the language the same as the original recipe."
             },
             {
               role: "user",
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that extracts recipe information from images. Return the data in a consistent JSON format. Keep the language the same as the original recipe."
+            content: "You are a helpful assistant that extracts recipe information from images. Return the data in a consistent JSON format. Keep the language the same as the original recipe. Include meal_type and cuisine fields in your response."
           },
           {
             role: "user",

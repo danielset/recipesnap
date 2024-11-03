@@ -18,6 +18,8 @@ interface Recipe {
   user_id: string
   ingredients?: string[]
   steps?: string[]
+  meal_type?: string
+  cuisine?: string
 }
 
 export function Page() {
@@ -26,13 +28,15 @@ export function Page() {
   const [searchQuery, setSearchQuery] = useState('')
   const [session, setSession] = useState<Session | null>(null)
   const { toast } = useToast()
+  const [selectedMealType, setSelectedMealType] = useState<string>('')
+  const [selectedCuisine, setCuisine] = useState<string>('')
+  const [uniqueMealTypes, setUniqueMealTypes] = useState<string[]>([])
+  const [uniqueCuisines, setUniqueCuisines] = useState<string[]>([])
 
   const fetchRecipes = async (search?: string) => {
     try {
-      // Get current user session
       const { data: { session } } = await supabase.auth.getSession()
       
-      // If no session, set empty recipes and return
       if (!session) {
         setRecipes([])
         return
@@ -52,28 +56,42 @@ export function Page() {
 
         const searchLower = search.toLowerCase()
         const filteredData = data.filter(recipe => {
-          // More precise search in ingredients
+          if (selectedMealType && recipe.meal_type !== selectedMealType) return false
+          if (selectedCuisine && recipe.cuisine !== selectedCuisine) return false
+
           const ingredientsMatch = recipe.ingredients?.some((ingredient: string) =>
             ingredient.toLowerCase().includes(searchLower)
           ) || false
 
-          // More precise search in steps
           const stepsMatch = recipe.steps?.some((step: string) =>
             step.toLowerCase().includes(searchLower)
           ) || false
 
-          // Match in title or description
           const titleMatch = recipe.title.toLowerCase().includes(searchLower)
           const descriptionMatch = recipe.description?.toLowerCase().includes(searchLower)
+          const mealTypeMatch = recipe.meal_type?.toLowerCase().includes(searchLower) || false
+          const cuisineMatch = recipe.cuisine?.toLowerCase().includes(searchLower) || false
 
-          return titleMatch || descriptionMatch || ingredientsMatch || stepsMatch
+          return titleMatch || descriptionMatch || ingredientsMatch || stepsMatch || 
+                 mealTypeMatch || cuisineMatch
         })
 
         setRecipes(filteredData)
       } else {
-        const { data, error } = await query
+        let filteredQuery = query
+
+        const { data, error } = await filteredQuery
         if (error) throw error
-        setRecipes(data || [])
+
+        let filteredData = data || []
+        if (selectedMealType) {
+          filteredData = filteredData.filter(recipe => recipe.meal_type === selectedMealType)
+        }
+        if (selectedCuisine) {
+          filteredData = filteredData.filter(recipe => recipe.cuisine === selectedCuisine)
+        }
+
+        setRecipes(filteredData)
       }
     } catch (error) {
       console.error('Error fetching recipes:', error)
@@ -87,13 +105,21 @@ export function Page() {
     }
   }
 
+  const updateFilterOptions = (recipes: Recipe[]) => {
+    const mealTypes = new Set(recipes.map(recipe => recipe.meal_type).filter((type): type is string => !!type))
+    const cuisines = new Set(recipes.map(recipe => recipe.cuisine).filter((cuisine): cuisine is string => !!cuisine))
+    
+    setUniqueMealTypes(Array.from(mealTypes))
+    setUniqueCuisines(Array.from(cuisines))
+  }
+
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchRecipes(searchQuery)
     }, 300)
 
     return () => clearTimeout(debounceTimer)
-  }, [searchQuery])
+  }, [searchQuery, selectedMealType, selectedCuisine])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -106,6 +132,10 @@ export function Page() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    updateFilterOptions(recipes)
+  }, [recipes])
 
   return (
     <div className="container mx-auto p-4">
@@ -124,7 +154,7 @@ export function Page() {
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <Input
           type="search"
           placeholder="Search recipes..."
@@ -132,6 +162,32 @@ export function Page() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-md"
         />
+        
+        <select
+          value={selectedMealType}
+          onChange={(e) => setSelectedMealType(e.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 py-2"
+        >
+          <option value="">All Meal Types</option>
+          {uniqueMealTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={selectedCuisine}
+          onChange={(e) => setCuisine(e.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 py-2"
+        >
+          <option value="">All Cuisines</option>
+          {uniqueCuisines.map((cuisine) => (
+            <option key={cuisine} value={cuisine}>
+              {cuisine}
+            </option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -154,6 +210,8 @@ export function Page() {
               title={recipe.title}
               description={recipe.description}
               image={recipe.image_url || '/placeholder.svg?height=200&width=300'}
+              meal_type={recipe.meal_type}
+              cuisine={recipe.cuisine}
             />
           ))}
         </div>

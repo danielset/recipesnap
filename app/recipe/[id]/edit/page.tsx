@@ -26,6 +26,8 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
+  const [mealType, setMealType] = useState('')
+  const [cuisine, setCuisine] = useState('')
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -42,6 +44,8 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
         setDescription(data.description)
         setIngredients(data.ingredients.join('\n'))
         setSteps(data.steps.join('\n'))
+        setMealType(data.meal_type || '')
+        setCuisine(data.cuisine || '')
         if (data.image_url) {
           setImagePreview(data.image_url)
         }
@@ -116,7 +120,9 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
           description,
           ingredients: ingredientsArray,
           steps: stepsArray,
-          image_url: imageUrl
+          image_url: imageUrl,
+          meal_type: mealType,
+          cuisine: cuisine
         })
         .eq('id', params.id)
 
@@ -227,6 +233,30 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
             required
             disabled={isSubmitting}
             className="min-h-[150px] w-full"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="meal-type">Meal Type</Label>
+          <Input
+            id="meal-type"
+            value={mealType}
+            onChange={(e) => setMealType(e.target.value)}
+            placeholder="e.g., Breakfast, Lunch, Dinner, Snack"
+            disabled={isSubmitting}
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="cuisine">Cuisine</Label>
+          <Input
+            id="cuisine"
+            value={cuisine}
+            onChange={(e) => setCuisine(e.target.value)}
+            placeholder="e.g., Italian, Mexican, Japanese"
+            disabled={isSubmitting}
+            className="w-full"
           />
         </div>
 
