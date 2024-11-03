@@ -21,38 +21,6 @@ async function getOgImage(url: string): Promise<string | null> {
   }
 }
 
-async function downloadAndStoreImage(imageUrl: string): Promise<string | null> {
-  try {
-    // Download the image
-    const response = await fetch(imageUrl)
-    const imageBlob = await response.blob()
-    
-    // Generate a unique filename
-    const fileExt = imageUrl.split('.').pop()?.split('?')[0] || 'jpg'
-    const fileName = `${Math.random()}.${fileExt}`
-    
-    // Upload to Supabase storage
-    const { error: uploadError, data } = await supabase.storage
-      .from('recipes')
-      .upload(fileName, imageBlob)
-    
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return null
-    }
-    
-    // Get the public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('recipes')
-      .getPublicUrl(fileName)
-    
-    return publicUrl
-  } catch (error) {
-    console.error('Error downloading and storing image:', error)
-    return null
-  }
-}
-
 async function convertHeicToJpeg(file: File): Promise<File> {
   if (!file.type.includes('heic')) return file;
 
@@ -140,7 +108,7 @@ export async function POST(request: Request) {
       const fileExt = image.name.split('.').pop() || 'jpg'
       const fileName = `${Math.random()}.${fileExt}`
       
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('recipes')
         .upload(fileName, image)
       
@@ -171,9 +139,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(recipeData)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error:', error)
-    const errorMessage = error.message?.includes('HEIC') 
+    const errorMessage = error instanceof Error && error.message?.includes('HEIC') 
       ? 'Failed to process HEIC image. Please try converting it to JPEG first.'
       : 'Failed to extract recipe'
     

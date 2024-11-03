@@ -27,7 +27,7 @@ export function Page() {
 
   const fetchRecipes = async (search?: string) => {
     try {
-      let query = supabase
+      const query = supabase
         .from('recipes')
         .select('*')
         .order('created_at', { ascending: false })
