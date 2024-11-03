@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/utils/supabase'
 import { useRouter } from 'next/navigation'
 import { useToast } from "@/components/ui/use-toast"
+import Image from 'next/image'
 
 interface Recipe {
   id: number
@@ -106,9 +107,11 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">{recipe.title}</h1>
       <div className="relative">
-        <img
+        <Image
           src={recipe.image_url || '/placeholder.svg?height=400&width=600'}
           alt={recipe.title}
+          width={800}
+          height={400}
           className="w-full max-w-2xl mx-auto mb-6 rounded-lg object-cover h-[400px] cursor-pointer"
           onClick={() => setIsImageModalOpen(true)}
         />
@@ -132,9 +135,11 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           onClick={() => setIsImageModalOpen(false)}
         >
           <div className="max-w-[90vw] max-h-[90vh]">
-            <img
+            <Image
               src={recipe.image_url || '/placeholder.svg?height=400&width=600'}
               alt={recipe.title}
+              width={1200}
+              height={800}
               className="max-w-full max-h-[90vh] object-contain"
               onClick={(e) => e.stopPropagation()}
             />

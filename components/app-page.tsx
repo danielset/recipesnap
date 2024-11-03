@@ -78,7 +78,7 @@ export function Page() {
 
         setRecipes(filteredData)
       } else {
-        let filteredQuery = query
+        const filteredQuery = query
 
         const { data, error } = await filteredQuery
         if (error) throw error
@@ -119,7 +119,7 @@ export function Page() {
     }, 300)
 
     return () => clearTimeout(debounceTimer)
-  }, [searchQuery, selectedMealType, selectedCuisine])
+  }, [searchQuery, selectedMealType, selectedCuisine, fetchRecipes])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
