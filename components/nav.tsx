@@ -34,7 +34,7 @@ export function Nav() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between h-16 items-center">
           <Link href="/" className="text-xl font-bold">
-            Recipe App
+            RecipeSnap
           </Link>
           <div className="flex items-center space-x-4">
             {user ? (

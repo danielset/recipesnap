@@ -60,15 +60,15 @@ export async function POST(request: Request) {
       // Existing URL extraction logic
       [completion, imageUrl] = await Promise.all([
         new OpenAI().chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
-              content: "You are a helpful assistant that extracts recipe information from URLs. Return the data in a consistent JSON format. When ingredients use US imperial measurements (cups, ounces, pounds, etc.), add metric conversions in parentheses at the end of each ingredient (e.g., '1 cup flour (120g)', '1 lb beef (454g)')."
+              content: "You are a helpful assistant that extracts recipe information from URLs. Return the data in a consistent JSON format. When ingredients use US imperial measurements (cups, ounces, pounds, etc.), add metric conversions in parentheses at the end of each ingredient (e.g., '1 cup flour (120g)', '1 lb beef (454g)'). Keep the language the same as the original recipe."
             },
             {
               role: "user",
-              content: `Extract the recipe information from this URL: ${url}. Return a JSON object with title, description, ingredients (as array with metric conversions), steps (as array)`
+              content: `Extract the recipe information from this URL: ${url}. Return a JSON object with title, description, ingredients (as array with metric conversions), steps (as array). Keep the language the same as the original recipe.`
             }
           ],
         }),
@@ -86,12 +86,12 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that extracts recipe information from images. Return the data in a consistent JSON format."
+            content: "You are a helpful assistant that extracts recipe information from images. Return the data in a consistent JSON format. Keep the language the same as the original recipe."
           },
           {
             role: "user",
             content: [
-              { type: "text", text: "Extract the recipe information from this image. Return a JSON object with title, description, ingredients (as array), steps (as array)" },
+              { type: "text", text: "Extract the recipe information from this image. Return a JSON object with title, description, ingredients (as array), steps (as array). Keep the language the same as the original recipe." },
               {
                 type: "image_url",
                 image_url: {

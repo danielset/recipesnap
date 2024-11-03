@@ -161,17 +161,18 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           </ol>
         </div>
       </div>
-      <div className="mt-8 flex gap-4">
-        <Link href="/">
-          <Button variant="outline">Back to Recipes</Button>
+      <div className="mt-8 flex flex-col sm:flex-row gap-4">
+        <Link href="/" className="w-full sm:w-auto">
+          <Button variant="outline" className="w-full">Back to Recipes</Button>
         </Link>
-        <Link href={`/recipe/${params.id}/edit`}>
-          <Button variant="secondary">Edit Recipe</Button>
+        <Link href={`/recipe/${params.id}/edit`} className="w-full sm:w-auto">
+          <Button variant="secondary" className="w-full">Edit Recipe</Button>
         </Link>
         <Button 
           variant="destructive" 
           onClick={handleDelete}
           disabled={isDeleting}
+          className="w-full sm:w-auto"
         >
           {isDeleting ? 'Deleting...' : 'Delete Recipe'}
         </Button>

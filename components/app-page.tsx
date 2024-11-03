@@ -118,7 +118,6 @@ export function Page() {
         </div>
       ) : (
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">My Recipes</h1>
           <Link href="/add-recipe">
             <Button>Add New Recipe</Button>
           </Link>
@@ -147,7 +146,7 @@ export function Page() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           {recipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
