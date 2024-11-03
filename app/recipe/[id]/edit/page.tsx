@@ -10,6 +10,11 @@ import { supabase } from '@/utils/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
 
+const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  e.target.style.height = 'auto'
+  e.target.style.height = `${e.target.scrollHeight}px`
+}
+
 const EditRecipePage = ({ params }: { params: { id: string } }) => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -153,6 +158,7 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
             onChange={(e) => setTitle(e.target.value)}
             required
             disabled={isSubmitting}
+            className="w-full"
           />
         </div>
 
@@ -184,9 +190,13 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
           <Textarea
             id="description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              autoResize(e)
+            }}
             required
             disabled={isSubmitting}
+            className="min-h-[100px] w-full"
           />
         </div>
 
@@ -195,9 +205,13 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
           <Textarea
             id="ingredients"
             value={ingredients}
-            onChange={(e) => setIngredients(e.target.value)}
+            onChange={(e) => {
+              setIngredients(e.target.value)
+              autoResize(e)
+            }}
             required
             disabled={isSubmitting}
+            className="min-h-[150px] w-full"
           />
         </div>
 
@@ -206,9 +220,13 @@ const EditRecipePage = ({ params }: { params: { id: string } }) => {
           <Textarea
             id="steps"
             value={steps}
-            onChange={(e) => setSteps(e.target.value)}
+            onChange={(e) => {
+              setSteps(e.target.value)
+              autoResize(e)
+            }}
             required
             disabled={isSubmitting}
+            className="min-h-[150px] w-full"
           />
         </div>
 

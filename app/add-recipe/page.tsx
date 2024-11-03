@@ -11,6 +11,11 @@ import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
+const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  e.target.style.height = 'auto'
+  e.target.style.height = `${e.target.scrollHeight}px`
+}
+
 const AddRecipePage = () => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -270,13 +275,14 @@ const AddRecipePage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">Add New Recipe</h1>
-        <div className="space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={() => setShowUrlDialog(true)}
+            className="w-full sm:w-auto"
           >
             Extract from URL
           </Button>
@@ -284,6 +290,7 @@ const AddRecipePage = () => {
             type="button"
             variant="outline"
             onClick={() => setShowImageDialog(true)}
+            className="w-full sm:w-auto"
           >
             Extract from Image
           </Button>
@@ -302,6 +309,7 @@ const AddRecipePage = () => {
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 disabled={isExtracting}
+                className="w-full"
               />
               <Button 
                 onClick={handleExtractFromUrl}
@@ -348,6 +356,7 @@ const AddRecipePage = () => {
             onChange={(e) => setTitle(e.target.value)}
             required
             disabled={isSubmitting}
+            className="w-full"
           />
         </div>
 
@@ -379,9 +388,13 @@ const AddRecipePage = () => {
           <Textarea
             id="description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              autoResize(e)
+            }}
             required
             disabled={isSubmitting}
+            className="min-h-[100px] w-full"
           />
         </div>
 
@@ -390,9 +403,13 @@ const AddRecipePage = () => {
           <Textarea
             id="ingredients"
             value={ingredients}
-            onChange={(e) => setIngredients(e.target.value)}
+            onChange={(e) => {
+              setIngredients(e.target.value)
+              autoResize(e)
+            }}
             required
             disabled={isSubmitting}
+            className="min-h-[150px] w-full"
           />
         </div>
 
@@ -401,9 +418,13 @@ const AddRecipePage = () => {
           <Textarea
             id="steps"
             value={steps}
-            onChange={(e) => setSteps(e.target.value)}
+            onChange={(e) => {
+              setSteps(e.target.value)
+              autoResize(e)
+            }}
             required
             disabled={isSubmitting}
+            className="min-h-[150px] w-full"
           />
         </div>
 
