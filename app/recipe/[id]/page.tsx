@@ -7,6 +7,7 @@ import { supabase } from '@/utils/supabase'
 import { useRouter } from 'next/navigation'
 import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
+import { Heart, HeartOff } from 'lucide-react'
 
 interface Recipe {
   id: number
@@ -16,6 +17,7 @@ interface Recipe {
   description: string
   ingredients: string[]
   steps: string[]
+  is_favorite: boolean
 }
 
 const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
@@ -25,6 +27,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   const { toast } = useToast()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+  const [isFavoriting, setIsFavoriting] = useState(false)
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -95,6 +98,35 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
     }
   }
 
+  const toggleFavorite = async () => {
+    if (!recipe) return
+    setIsFavoriting(true)
+    
+    try {
+      const newFavoriteStatus = !recipe.is_favorite
+      const { error } = await supabase
+        .from('recipes')
+        .update({ is_favorite: newFavoriteStatus })
+        .eq('id', params.id)
+
+      if (error) throw error
+
+      setRecipe({ ...recipe, is_favorite: newFavoriteStatus })
+      toast({
+        title: newFavoriteStatus ? "Added to favorites" : "Removed from favorites",
+      })
+    } catch (error) {
+      console.error('Error updating favorite status:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update favorite status",
+        variant: "destructive",
+      })
+    } finally {
+      setIsFavoriting(false)
+    }
+  }
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -105,7 +137,22 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">{recipe.title}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">{recipe.title}</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleFavorite}
+          disabled={isFavoriting}
+          className="hover:bg-transparent"
+        >
+          {recipe.is_favorite ? (
+            <Heart className="h-6 w-6 fill-red-500 text-red-500" />
+          ) : (
+            <HeartOff className="h-6 w-6" />
+          )}
+        </Button>
+      </div>
       <div className="relative">
         <Image
           src={recipe.image_url || '/placeholder.svg?height=400&width=600'}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import RecipeCard from '@/components/RecipeCard'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ interface Recipe {
   steps?: string[]
   meal_type?: string
   cuisine?: string
+  is_favorite?: boolean
 }
 
 export function Page() {
@@ -32,8 +33,9 @@ export function Page() {
   const [selectedCuisine, setCuisine] = useState<string>('')
   const [uniqueMealTypes, setUniqueMealTypes] = useState<string[]>([])
   const [uniqueCuisines, setUniqueCuisines] = useState<string[]>([])
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
 
-  const fetchRecipes = async (search?: string) => {
+  const fetchRecipes = useCallback(async (search?: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
@@ -58,6 +60,7 @@ export function Page() {
         const filteredData = data.filter(recipe => {
           if (selectedMealType && recipe.meal_type !== selectedMealType) return false
           if (selectedCuisine && recipe.cuisine !== selectedCuisine) return false
+          if (showFavoritesOnly && !recipe.is_favorite) return false
 
           const ingredientsMatch = recipe.ingredients?.some((ingredient: string) =>
             ingredient.toLowerCase().includes(searchLower)
@@ -90,6 +93,9 @@ export function Page() {
         if (selectedCuisine) {
           filteredData = filteredData.filter(recipe => recipe.cuisine === selectedCuisine)
         }
+        if (showFavoritesOnly) {
+          filteredData = filteredData.filter(recipe => recipe.is_favorite)
+        }
 
         setRecipes(filteredData)
       }
@@ -103,7 +109,7 @@ export function Page() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast, selectedMealType, selectedCuisine, showFavoritesOnly])
 
   const updateFilterOptions = (recipes: Recipe[]) => {
     const mealTypes = new Set(recipes.map(recipe => recipe.meal_type).filter((type): type is string => !!type))
@@ -188,6 +194,14 @@ export function Page() {
             </option>
           ))}
         </select>
+
+        <Button
+          variant={showFavoritesOnly ? "default" : "outline"}
+          onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+          className="whitespace-nowrap"
+        >
+          {showFavoritesOnly ? "★ Favorites Only" : "☆ Show All"}
+        </Button>
       </div>
 
       {loading ? (
@@ -206,12 +220,14 @@ export function Page() {
           {recipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
-              id={recipe.id}
-              title={recipe.title}
-              description={recipe.description}
-              image={recipe.image_url || '/placeholder.svg?height=200&width=300'}
-              meal_type={recipe.meal_type}
-              cuisine={recipe.cuisine}
+              {...recipe}
+              image={recipe.image_url}
+              is_favorite={recipe.is_favorite ?? false}
+              onFavoriteChange={(id, newStatus) => {
+                setRecipes(recipes.map(r => 
+                  r.id === id ? { ...r, is_favorite: newStatus } : r
+                ))
+              }}
             />
           ))}
         </div>
