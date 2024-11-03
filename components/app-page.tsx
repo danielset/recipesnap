@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/utils/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
+import { Session } from '@supabase/supabase-js'
 
 interface Recipe {
   id: number
@@ -23,13 +24,24 @@ export function Page() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [session, setSession] = useState<Session | null>(null)
   const { toast } = useToast()
 
   const fetchRecipes = async (search?: string) => {
     try {
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      // If no session, set empty recipes and return
+      if (!session) {
+        setRecipes([])
+        return
+      }
+
       const query = supabase
         .from('recipes')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
 
       if (search) {
@@ -83,14 +95,35 @@ export function Page() {
     return () => clearTimeout(debounceTimer)
   }, [searchQuery])
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">My Recipes</h1>
-        <Link href="/add-recipe">
-          <Button>Add New Recipe</Button>
-        </Link>
-      </div>
+      {!session ? (
+        <div className="text-center py-12">
+          <p className="text-xl text-gray-600 mb-4">Please log in to view your recipes</p>
+          <Link href="/login">
+            <Button variant="outline">Log In</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">My Recipes</h1>
+          <Link href="/add-recipe">
+            <Button>Add New Recipe</Button>
+          </Link>
+        </div>
+      )}
 
       <div className="mb-6">
         <Input
