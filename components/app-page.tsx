@@ -112,7 +112,7 @@ export function Page() {
       {!session ? (
         <div className="text-center py-12">
           <p className="text-xl text-gray-600 mb-4">Please log in to view your recipes</p>
-          <Link href="/login">
+          <Link href="/auth/sign-in">
             <Button variant="outline">Log In</Button>
           </Link>
         </div>
