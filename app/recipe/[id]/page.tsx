@@ -155,7 +155,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
       </div>
       <div className="relative">
         <Image
-          src={recipe.image_url || '/placeholder.svg?height=400&width=600'}
+          src={recipe.image_url || '/default_image.png'}
           alt={recipe.title}
           width={800}
           height={400}
@@ -183,7 +183,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
         >
           <div className="max-w-[90vw] max-h-[90vh]">
             <Image
-              src={recipe.image_url || '/placeholder.svg?height=400&width=600'}
+              src={recipe.image_url || '/default_image.png'}
               alt={recipe.title}
               width={1200}
               height={800}

@@ -153,84 +153,86 @@ export function Page() {
           </Link>
         </div>
       ) : (
-        <div className="flex justify-between items-center mb-6">
-          <Link href="/add-recipe">
-            <Button>Add New Recipe</Button>
-          </Link>
-        </div>
-      )}
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <Link href="/add-recipe">
+              <Button>Add New Recipe</Button>
+            </Link>
+          </div>
 
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <Input
-          type="search"
-          placeholder="Search recipes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md"
-        />
-        
-        <select
-          value={selectedMealType}
-          onChange={(e) => setSelectedMealType(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 py-2"
-        >
-          <option value="">All Meal Types</option>
-          {uniqueMealTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={selectedCuisine}
-          onChange={(e) => setCuisine(e.target.value)}
-          className="h-10 rounded-md border border-input bg-background px-3 py-2"
-        >
-          <option value="">All Cuisines</option>
-          {uniqueCuisines.map((cuisine) => (
-            <option key={cuisine} value={cuisine}>
-              {cuisine}
-            </option>
-          ))}
-        </select>
-
-        <Button
-          variant={showFavoritesOnly ? "default" : "outline"}
-          onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-          className="whitespace-nowrap"
-        >
-          {showFavoritesOnly ? "★ Favorites Only" : "☆ Show All"}
-        </Button>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-        </div>
-      ) : recipes.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-xl text-gray-600 mb-4">No recipes found</p>
-          <Link href="/recipes/add">
-            <Button variant="outline">Add Your First Recipe</Button>
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-          {recipes.map((recipe) => (
-            <RecipeCard
-              key={recipe.id}
-              {...recipe}
-              image={recipe.image_url}
-              is_favorite={recipe.is_favorite ?? false}
-              onFavoriteChange={(id, newStatus) => {
-                setRecipes(recipes.map(r => 
-                  r.id === id ? { ...r, is_favorite: newStatus } : r
-                ))
-              }}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4">
+            <Input
+              type="search"
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-md"
             />
-          ))}
-        </div>
+            
+            <select
+              value={selectedMealType}
+              onChange={(e) => setSelectedMealType(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2"
+            >
+              <option value="">All Meal Types</option>
+              {uniqueMealTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedCuisine}
+              onChange={(e) => setCuisine(e.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2"
+            >
+              <option value="">All Cuisines</option>
+              {uniqueCuisines.map((cuisine) => (
+                <option key={cuisine} value={cuisine}>
+                  {cuisine}
+                </option>
+              ))}
+            </select>
+
+            <Button
+              variant={showFavoritesOnly ? "default" : "outline"}
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className="whitespace-nowrap"
+            >
+              {showFavoritesOnly ? "★ Favorites Only" : "☆ Show All"}
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            </div>
+          ) : recipes.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-xl text-gray-600 mb-4">No recipes found</p>
+              <Link href="/recipes/add">
+                <Button variant="outline">Add Your First Recipe</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+              {recipes.map((recipe) => (
+                <RecipeCard
+                  key={recipe.id}
+                  {...recipe}
+                  image={recipe.image_url || '/default_image.png'}
+                  is_favorite={recipe.is_favorite ?? false}
+                  onFavoriteChange={(id, newStatus) => {
+                    setRecipes(recipes.map(r => 
+                      r.id === id ? { ...r, is_favorite: newStatus } : r
+                    ))
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
