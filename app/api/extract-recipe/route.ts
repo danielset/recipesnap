@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { supabase } from '@/utils/supabase'
 import heicConvert from 'heic-convert'
+import FirecrawlApp from '@mendable/firecrawl-js'
 
 async function getOgImage(url: string): Promise<string | null> {
   try {
@@ -42,6 +43,21 @@ async function convertHeicToJpeg(file: File): Promise<File> {
   }
 }
 
+// Add new function to scrape URL
+async function scrapeRecipeUrl(url: string): Promise<string> {
+  const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY! })
+  
+  const scrapeResponse = await app.scrapeUrl(url, {
+    formats: ['markdown']
+  })
+
+  if (!scrapeResponse.success || !scrapeResponse.markdown) {
+    throw new Error(`Failed to scrape URL: ${scrapeResponse.error || 'No markdown content'}`)
+  }
+
+  return scrapeResponse.markdown
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -57,23 +73,28 @@ export async function POST(request: Request) {
     let imageUrl = null;
 
     if (url) {
-      // Existing URL extraction logic
-      [completion, imageUrl] = await Promise.all([
-        new OpenAI().chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: "You are a helpful assistant that extracts recipe information from URLs. Return the data in a consistent JSON format. When ingredients use US imperial measurements (cups, ounces, pounds, etc.), add metric conversions in parentheses at the end of each ingredient (e.g., '1 cup flour (120g)', '1 lb beef (454g)'). Include meal_type and cuisine fields in your response. Keep the language the same as the original recipe."
-            },
-            {
-              role: "user",
-              content: `Extract the recipe information from this URL: ${url}. Return a JSON object with title, description, ingredients (as array with metric conversions), steps (as array). Keep the language the same as the original recipe.`
-            }
-          ],
-        }),
+      // First scrape the URL content
+      const [markdown, ogImage] = await Promise.all([
+        scrapeRecipeUrl(url),
         getOgImage(url)
-      ]);
+      ])
+
+      // Then pass the markdown to ChatGPT
+      completion = await new OpenAI().chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that extracts recipe information from markdown content. Return the data in a consistent JSON format. When ingredients use US imperial measurements (cups, ounces, pounds, etc.), add metric conversions in parentheses at the end of each ingredient (e.g., '1 cup flour (120g)', '1 lb beef (454g)')."
+          },
+          {
+            role: "user",
+            content: `Extract the recipe information from this markdown content:\n\n${markdown}\n\nReturn a JSON object with title, description, ingredients (as array with metric conversions), steps (as array), meal_type, and cuisine.`
+          }
+        ],
+      })
+      
+      imageUrl = ogImage
     } else if (image) {
       // Convert image to base64
       const bytes = await image.arrayBuffer()
