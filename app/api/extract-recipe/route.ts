@@ -4,11 +4,21 @@ import { supabase } from '@/utils/supabase'
 import heicConvert from 'heic-convert'
 import FirecrawlApp from '@mendable/firecrawl-js'
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb' // Adjust this value based on your needs
-    }
+export const maxDuration = 300 // 5 minutes
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+// To handle large files, we need to use Edge Runtime configuration
+export const generateStaticParams = async () => {
+  return []
+}
+
+// Add this middleware configuration
+export async function middleware(request: Request) {
+  // Set the maximum content length to 10MB
+  const contentLength = request.headers.get('content-length')
+  if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+    return new Response('File too large', { status: 413 })
   }
 }
 
