@@ -311,7 +311,8 @@ const AddRecipePage = () => {
 
       setExtractImage(processedFile);
       setIsConverting(false);
-    } catch (error) {
+    } catch (err) {
+      console.error('Image processing error:', err);
       toast({
         title: "Error",
         description: "Failed to process image. Please try a different image.",
