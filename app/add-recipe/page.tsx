@@ -10,10 +10,27 @@ import { supabase } from '@/utils/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import imageCompression from 'browser-image-compression';
 
 const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
   e.target.style.height = 'auto'
   e.target.style.height = `${e.target.scrollHeight}px`
+}
+
+async function compressImage(file: File) {
+  const options = {
+    maxSizeMB: 1,          // Max file size of 1MB
+    maxWidthOrHeight: 1920, // Maintain good quality for recipe images
+    useWebWorker: true
+  };
+  
+  try {
+    const compressedFile = await imageCompression(file, options);
+    return compressedFile;
+  } catch (error) {
+    console.error('Error compressing image:', error);
+    throw error;
+  }
 }
 
 const AddRecipePage = () => {
@@ -266,31 +283,42 @@ const AddRecipePage = () => {
   }
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // Check file size (10MB limit)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
+    // Check initial file size
+    const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB initial limit
     if (file.size > MAX_FILE_SIZE) {
       toast({
-        title: "Error",
-        description: "Image size must be less than 10MB",
-        variant: "destructive",
-      })
-      e.target.value = '' // Reset the input
-      return
+        title: "Large Image Detected",
+        description: "Compressing image for upload...",
+      });
     }
 
-    if (file.type.toLowerCase().includes('heic')) {
-      setIsConverting(true)
+    try {
+      let processedFile = file;
+      
+      // Handle HEIC first if needed
+      if (file.type.toLowerCase().includes('heic')) {
+        setIsConverting(true);
+        // Your existing HEIC conversion logic
+      }
+
+      // Compress the image if it's not a HEIC file or after HEIC conversion
+      if (processedFile.size > MAX_FILE_SIZE) {
+        processedFile = await compressImage(processedFile);
+      }
+
+      setExtractImage(processedFile);
+      setIsConverting(false);
+    } catch (error) {
       toast({
-        title: "Converting image",
-        description: "Please wait while we convert your HEIC image...",
-      })
+        title: "Error",
+        description: "Failed to process image. Please try a different image.",
+        variant: "destructive",
+      });
+      e.target.value = ''; // Reset the input
     }
-    
-    setExtractImage(file)
-    setIsConverting(false)
   }
 
   return (
