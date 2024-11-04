@@ -4,7 +4,7 @@ import { supabase } from '@/utils/supabase'
 import heicConvert from 'heic-convert'
 import FirecrawlApp from '@mendable/firecrawl-js'
 
-export const maxDuration = 300 // 5 minutes
+export const maxDuration = 60 // 5 minutes
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
