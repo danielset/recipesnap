@@ -36,9 +36,10 @@ const SharedRecipePage = ({ params }: { params: { hash: string } }) => {
         setIsExpired(isLinkExpired)
         
         // Check if current user is the creator
-        setIsOwner(user?.id === sharedData.created_by)
+        const isCreator = user?.id === sharedData.created_by
+        setIsOwner(isCreator)
 
-        if (isLinkExpired && !isOwner) {
+        if (isLinkExpired && !isCreator) {
           setError('This share link has expired')
           return
         }

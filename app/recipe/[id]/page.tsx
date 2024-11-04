@@ -315,6 +315,11 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           Share Recipe
         </Button>
       </div>
+      {shareUrl && (
+        <div className="mt-2 text-sm text-gray-500">
+          Current share URL: {shareUrl}
+        </div>
+      )}
     </div>
   )
 }
