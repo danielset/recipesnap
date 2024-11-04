@@ -269,6 +269,18 @@ const AddRecipePage = () => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Check file size (10MB limit)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "Error",
+        description: "Image size must be less than 10MB",
+        variant: "destructive",
+      })
+      e.target.value = '' // Reset the input
+      return
+    }
+
     if (file.type.toLowerCase().includes('heic')) {
       setIsConverting(true)
       toast({

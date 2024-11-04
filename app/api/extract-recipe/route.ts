@@ -4,6 +4,14 @@ import { supabase } from '@/utils/supabase'
 import heicConvert from 'heic-convert'
 import FirecrawlApp from '@mendable/firecrawl-js'
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb' // Adjust this value based on your needs
+    }
+  }
+}
+
 async function getOgImage(url: string): Promise<string | null> {
   try {
     const response = await fetch(url)
