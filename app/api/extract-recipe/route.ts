@@ -13,15 +13,6 @@ export const generateStaticParams = async () => {
   return []
 }
 
-// Add this middleware configuration
-export async function middleware(request: Request) {
-  // Set the maximum content length to 10MB
-  const contentLength = request.headers.get('content-length')
-  if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
-    return new Response('File too large', { status: 413 })
-  }
-}
-
 async function getOgImage(url: string): Promise<string | null> {
   try {
     const response = await fetch(url)

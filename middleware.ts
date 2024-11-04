@@ -1,24 +1,21 @@
-// middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+// Create this new file in the root of your project
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // If there's no session and the user is trying to access a protected route
-  if (!session && req.nextUrl.pathname.startsWith('/recipes/add')) {
-    return NextResponse.redirect(new URL('/auth/sign-in', req.url))
+export function middleware(request: NextRequest) {
+  // Only apply to /api/extract-recipe route
+  if (request.nextUrl.pathname === '/api/extract-recipe') {
+    const contentLength = request.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'File too large' },
+        { status: 413 }
+      )
+    }
   }
-
-  return res
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/recipes/add'],
+  matcher: '/api/extract-recipe'
 }
