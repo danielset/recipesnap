@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
 import { Heart, HeartOff } from 'lucide-react'
+import { nanoid } from 'nanoid'
 
 interface Recipe {
   id: number
@@ -28,6 +29,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [isFavoriting, setIsFavoriting] = useState(false)
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -124,6 +126,83 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
       })
     } finally {
       setIsFavoriting(false)
+    }
+  }
+
+  const handleShare = async () => {
+    try {
+      // First get the current user
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to share recipes",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Check for existing share, including expired ones
+      const { data: existingShare } = await supabase
+        .from('shared_recipes')
+        .select('share_hash, expires_at')
+        .eq('recipe_id', params.id)
+        .eq('created_by', user.id)
+        .single()
+
+      let shareHash: string
+      const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+
+      // If share exists and is not expired, use it
+      if (existingShare && new Date(existingShare.expires_at) > new Date()) {
+        shareHash = existingShare.share_hash
+      } 
+      // If share exists but is expired, update it
+      else if (existingShare) {
+        const { error } = await supabase
+          .from('shared_recipes')
+          .update({
+            expires_at: expirationDate.toISOString(),
+            share_hash: nanoid(10), // Generate new hash for security
+          })
+          .eq('share_hash', existingShare.share_hash)
+          .select('share_hash')
+          .single()
+
+        if (error) throw error
+        shareHash = existingShare.share_hash
+      } 
+      // If no share exists, create new one
+      else {
+        shareHash = nanoid(10)
+        const { error } = await supabase
+          .from('shared_recipes')
+          .insert({
+            recipe_id: params.id,
+            share_hash: shareHash,
+            created_by: user.id,
+            expires_at: expirationDate.toISOString(),
+          })
+
+        if (error) throw error
+      }
+
+      const url = `${window.location.origin}/share/${shareHash}`
+      setShareUrl(url)
+      await navigator.clipboard.writeText(url)
+      
+      toast({
+        title: "Link copied!",
+        description: "Share link valid for 30 days has been copied to clipboard",
+      })
+    } catch (error) {
+      console.error('Error creating share link:', error)
+      toast({
+        title: "Error",
+        description: "Failed to create share link",
+        variant: "destructive",
+      })
     }
   }
 
@@ -227,6 +306,13 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           className="w-full sm:w-auto"
         >
           {isDeleting ? 'Deleting...' : 'Delete Recipe'}
+        </Button>
+        <Button 
+          variant="secondary" 
+          onClick={handleShare}
+          className="w-full sm:w-auto"
+        >
+          Share Recipe
         </Button>
       </div>
     </div>
