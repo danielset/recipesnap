@@ -41,7 +41,7 @@ export default async function generateMetadata({ params }: { params: { hash: str
         images: recipe.image_url ? [recipe.image_url] : [],
       },
     }
-  } catch (error) {
+  } catch {
     return {
       title: 'Recipe Error',
       description: 'There was an error loading this recipe'
