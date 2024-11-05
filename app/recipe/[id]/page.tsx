@@ -34,7 +34,6 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [isFavoriting, setIsFavoriting] = useState(false)
-  const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null)
   const [isLoadingShare, setIsLoadingShare] = useState(false)
 
