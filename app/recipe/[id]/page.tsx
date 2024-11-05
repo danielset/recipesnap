@@ -21,6 +21,11 @@ interface Recipe {
   is_favorite: boolean
 }
 
+interface ShareInfo {
+  share_hash: string;
+  expires_at: string;
+}
+
 const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   const router = useRouter()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
@@ -30,6 +35,8 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [isFavoriting, setIsFavoriting] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null)
+  const [isLoadingShare, setIsLoadingShare] = useState(false)
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -51,6 +58,26 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
     }
 
     fetchRecipe()
+  }, [params.id])
+
+  useEffect(() => {
+    async function fetchShareInfo() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('shared_recipes')
+        .select('share_hash, expires_at')
+        .eq('recipe_id', params.id)
+        .eq('created_by', user.id)
+        .single()
+
+      if (data && new Date(data.expires_at) > new Date()) {
+        setShareInfo(data)
+      }
+    }
+
+    fetchShareInfo()
   }, [params.id])
 
   const handleDelete = async () => {
@@ -130,8 +157,8 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   }
 
   const handleShare = async () => {
+    setIsLoadingShare(true)
     try {
-      // First get the current user
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
@@ -143,66 +170,54 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
         return
       }
 
-      // Check for existing share, including expired ones
-      const { data: existingShare } = await supabase
-        .from('shared_recipes')
-        .select('share_hash, expires_at')
-        .eq('recipe_id', params.id)
-        .eq('created_by', user.id)
-        .single()
-
-      let shareHash: string
-      const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
-
-      // If share exists and is not expired, use it
-      if (existingShare && new Date(existingShare.expires_at) > new Date()) {
-        shareHash = existingShare.share_hash
-      } 
-      // If share exists but is expired, update it
-      else if (existingShare) {
+      if (shareInfo) {
         const { error } = await supabase
           .from('shared_recipes')
-          .update({
-            expires_at: expirationDate.toISOString(),
-            share_hash: nanoid(10), // Generate new hash for security
-          })
-          .eq('share_hash', existingShare.share_hash)
-          .select('share_hash')
-          .single()
+          .delete()
+          .eq('share_hash', shareInfo.share_hash)
 
         if (error) throw error
-        shareHash = existingShare.share_hash
-      } 
-      // If no share exists, create new one
-      else {
-        shareHash = nanoid(10)
-        const { error } = await supabase
-          .from('shared_recipes')
-          .insert({
-            recipe_id: params.id,
-            share_hash: shareHash,
-            created_by: user.id,
-            expires_at: expirationDate.toISOString(),
-          })
 
-        if (error) throw error
+        setShareInfo(null)
+        toast({
+          title: "Success",
+          description: "Recipe is no longer shared",
+        })
+        return
       }
 
-      const url = `${window.location.origin}/share/${shareHash}`
-      setShareUrl(url)
-      await navigator.clipboard.writeText(url)
+      const shareHash = nanoid(10)
+      const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+      const { error } = await supabase
+        .from('shared_recipes')
+        .insert({
+          recipe_id: params.id,
+          share_hash: shareHash,
+          created_by: user.id,
+          expires_at: expirationDate.toISOString(),
+        })
+
+      if (error) throw error
+
+      setShareInfo({
+        share_hash: shareHash,
+        expires_at: expirationDate.toISOString()
+      })
       
       toast({
-        title: "Link copied!",
-        description: "Share link valid for 30 days has been copied to clipboard",
+        title: "Success",
+        description: "Share link created successfully",
       })
     } catch (error) {
-      console.error('Error creating share link:', error)
+      console.error('Error managing share link:', error)
       toast({
         title: "Error",
-        description: "Failed to create share link",
+        description: "Failed to manage share link",
         variant: "destructive",
       })
+    } finally {
+      setIsLoadingShare(false)
     }
   }
 
@@ -292,6 +307,21 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           </ol>
         </div>
       </div>
+
+      {shareInfo && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">Share Link</h2>
+          <a 
+            href={`${window.location.origin}/share/${shareInfo.share_hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 underline break-all"
+          >
+            {`${window.location.origin}/share/${shareInfo.share_hash}`}
+          </a>
+        </div>
+      )}
+
       <div className="mt-8 flex flex-col sm:flex-row gap-4">
         <Link href="/" className="w-full sm:w-auto">
           <Button variant="outline" className="w-full">Back to Recipes</Button>
@@ -310,16 +340,17 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
         <Button 
           variant="secondary" 
           onClick={handleShare}
+          disabled={isLoadingShare}
           className="w-full sm:w-auto"
         >
-          Share Recipe
+          {isLoadingShare 
+            ? 'Loading...' 
+            : shareInfo 
+              ? 'Stop Sharing' 
+              : 'Share Recipe'
+          }
         </Button>
       </div>
-      {shareUrl && (
-        <div className="mt-2 text-sm text-gray-500">
-          Current share URL: {shareUrl}
-        </div>
-      )}
     </div>
   )
 }

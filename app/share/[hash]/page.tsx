@@ -17,6 +17,7 @@ const SharedRecipePage = ({ params }: { params: { hash: string } }) => {
   const router = useRouter()
   const [isOwner, setIsOwner] = useState(false)
   const [isExpired, setIsExpired] = useState(false)
+  const [newShareUrl, setNewShareUrl] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchSharedRecipe() {
@@ -81,15 +82,15 @@ const SharedRecipePage = ({ params }: { params: { hash: string } }) => {
       if (error) throw error
 
       const newUrl = `${window.location.origin}/share/${newHash}`
-      await navigator.clipboard.writeText(newUrl)
+      setNewShareUrl(newUrl)
       
       toast({
         title: "New link generated!",
-        description: "New share link has been copied to clipboard",
+        description: "You can now share the new link below",
       })
 
-      // Redirect to new URL
-      router.push(newUrl)
+      // No longer need to redirect
+      // router.push(newUrl)
     } catch (error) {
       console.error('Error regenerating link:', error)
       toast({
@@ -168,9 +169,17 @@ const SharedRecipePage = ({ params }: { params: { hash: string } }) => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <h2 className="text-xl font-semibold mb-4">This share link has expired</h2>
-        <Button onClick={handleRegenerateLink}>
+        <Button onClick={handleRegenerateLink} className="mb-4">
           Generate New Share Link
         </Button>
+        {newShareUrl && (
+          <a 
+            href={newShareUrl}
+            className="text-blue-500 hover:text-blue-700 underline break-all"
+          >
+            {newShareUrl}
+          </a>
+        )}
       </div>
     )
   }
