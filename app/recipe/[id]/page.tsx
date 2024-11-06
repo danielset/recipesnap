@@ -9,6 +9,14 @@ import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
 import { Heart, HeartOff } from 'lucide-react'
 import { nanoid } from 'nanoid'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface Recipe {
   id: number
@@ -36,6 +44,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   const [isFavoriting, setIsFavoriting] = useState(false)
   const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null)
   const [isLoadingShare, setIsLoadingShare] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -80,26 +89,8 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
   }, [params.id])
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this recipe?')) {
-      return
-    }
-
     setIsDeleting(true)
-
     try {
-      if (recipe?.image_url) {
-        const imagePath = recipe.image_url.split('/').pop()
-        if (imagePath) {
-          const { error: storageError } = await supabase.storage
-            .from('recipes')
-            .remove([imagePath])
-
-          if (storageError) {
-            console.error('Error deleting image:', storageError)
-          }
-        }
-      }
-
       const { error } = await supabase
         .from('recipes')
         .delete()
@@ -108,17 +99,16 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
       if (error) throw error
 
       toast({
-        title: "Success",
+        title: "Success!",
         description: "Recipe deleted successfully",
       })
-
       router.push('/')
       router.refresh()
     } catch (error) {
       console.error('Error deleting recipe:', error)
       toast({
         title: "Error",
-        description: "Failed to delete recipe. Please try again.",
+        description: "Failed to delete recipe",
         variant: "destructive",
       })
     } finally {
@@ -230,6 +220,14 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
 
   return (
     <div className="container mx-auto p-4">
+      <div className="mb-4">
+        <Link href="/">
+          <Button variant="ghost" className="pl-0 hover:bg-transparent">
+            ← Back to List
+          </Button>
+        </Link>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">{recipe.title}</h1>
         <Button
@@ -329,13 +327,40 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           <Button variant="secondary" className="w-full">Edit Recipe</Button>
         </Link>
         <Button 
-          variant="destructive" 
-          onClick={handleDelete}
+          variant="destructive"
+          onClick={() => setShowDeleteDialog(true)}
           disabled={isDeleting}
-          className="w-full sm:w-auto"
         >
           {isDeleting ? 'Deleting...' : 'Delete Recipe'}
         </Button>
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Recipe</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{recipe.title}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setShowDeleteDialog(false)
+                  handleDelete()
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Recipe'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Button 
           variant="secondary" 
           onClick={handleShare}

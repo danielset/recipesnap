@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: { params: { hash: string } })
           }
         ] : [],
         type: 'article',
-        siteName: 'RecipeSnap',
+        siteName: 'Recipinny',
         locale: 'en_US',
       },
       twitter: {

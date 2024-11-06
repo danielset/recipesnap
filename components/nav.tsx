@@ -30,11 +30,15 @@ export function Nav() {
   }
 
   return (
-    <nav className="bg-white shadow">
+    <nav className="bg-[#3397F2] shadow">
       <div className="container mx-auto px-4">
         <div className="flex justify-between h-16 items-center">
           <Link href="/" className="text-xl font-bold">
-            RecipeSnap
+            <img 
+              src="/logo_recipinny.svg" 
+              alt="Recipinny" 
+              className="h-8"
+            />
           </Link>
           <div className="flex items-center space-x-4">
             {user ? (

@@ -154,54 +154,57 @@ export function Page() {
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center mb-6">
-            <Link href="/add-recipe">
-              <Button>Add New Recipe</Button>
-            </Link>
-          </div>
-
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="mb-6 flex flex-col lg:flex-row gap-4">
+            {/* Search Input */}
             <Input
               type="search"
               placeholder="Search recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
+              className="w-full lg:w-80 h-10"
             />
-            
-            <select
-              value={selectedMealType}
-              onChange={(e) => setSelectedMealType(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2"
-            >
-              <option value="">All Meal Types</option>
-              {uniqueMealTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
 
-            <select
-              value={selectedCuisine}
-              onChange={(e) => setCuisine(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2"
-            >
-              <option value="">All Cuisines</option>
-              {uniqueCuisines.map((cuisine) => (
-                <option key={cuisine} value={cuisine}>
-                  {cuisine}
-                </option>
-              ))}
-            </select>
+            {/* Filters Group */}
+            <div className="flex flex-row gap-4 items-center overflow-x-auto">
+              <select
+                value={selectedMealType}
+                onChange={(e) => setSelectedMealType(e.target.value)}
+                className="h-10 w-[200px] rounded-md border border-input bg-background px-3 py-2"
+              >
+                <option value="">All Meal Types</option>
+                {uniqueMealTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
 
-            <Button
-              variant={showFavoritesOnly ? "default" : "outline"}
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className="whitespace-nowrap"
-            >
-              {showFavoritesOnly ? "★ Favorites Only" : "☆ Show All"}
-            </Button>
+              <select
+                value={selectedCuisine}
+                onChange={(e) => setCuisine(e.target.value)}
+                className="h-10 w-[200px] rounded-md border border-input bg-background px-3 py-2"
+              >
+                <option value="">All Cuisines</option>
+                {uniqueCuisines.map((cuisine) => (
+                  <option key={cuisine} value={cuisine}>
+                    {cuisine}
+                </option>
+                ))}
+              </select>
+
+              <Button
+                variant={showFavoritesOnly ? "default" : "outline"}
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className="whitespace-nowrap h-10"
+              >
+                {showFavoritesOnly ? "★ Favorites Only" : "☆ Show All"}
+              </Button>
+            </div>
+
+            {/* Add Recipe Button */}
+            <Link href="/add-recipe" className="lg:ml-auto">
+              <Button className="w-full lg:w-auto h-10">Add New Recipe</Button>
+            </Link>
           </div>
 
           {loading ? (
