@@ -19,7 +19,7 @@ const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 
 async function compressImage(file: File) {
   const options = {
-    maxSizeMB: 1,          // Max file size of 1MB
+    maxSizeMB: 4,          // Max file size of 1MB
     maxWidthOrHeight: 1920, // Maintain good quality for recipe images
     useWebWorker: true
   };
