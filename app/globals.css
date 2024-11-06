@@ -66,8 +66,17 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-  input, select, textarea {
-    font-size: 16px; /* Prevents zoom on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Force 16px minimum */
+    -webkit-text-size-adjust: 100%; /* Prevent iOS text size adjust */
   }
 }
 

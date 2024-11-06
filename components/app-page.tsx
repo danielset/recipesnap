@@ -8,6 +8,7 @@ import { supabase } from '@/utils/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
 import { Session } from '@supabase/supabase-js'
+import { PlusCircle } from 'lucide-react'
 
 interface Recipe {
   id: number
@@ -203,7 +204,12 @@ export function Page() {
 
             {/* Add Recipe Button */}
             <Link href="/add-recipe" className="lg:ml-auto">
-              <Button className="w-full lg:w-auto h-10">Add New Recipe</Button>
+              <Button 
+                className="w-full lg:w-auto h-10 bg-[#3397F2] hover:bg-[#3397F2]/90"
+              >
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Add New Recipe
+              </Button>
             </Link>
           </div>
 
