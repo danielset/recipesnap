@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/auth-provider'
 import { supabase } from '@/utils/supabase'
 import { useToast } from '@/components/ui/use-toast'
+import Image from 'next/image'
 
 export function Nav() {
   const { user } = useAuth()
@@ -34,10 +35,12 @@ export function Nav() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between h-16 items-center">
           <Link href="/" className="text-xl font-bold">
-            <img 
+            <Image 
               src="/logo_recipinny.svg" 
               alt="Recipinny" 
-              className="h-8"
+              width={32}
+              height={32}
+              className="h-8 w-auto"
             />
           </Link>
           <div className="flex items-center space-x-4">

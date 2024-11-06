@@ -338,7 +338,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
             <DialogHeader>
               <DialogTitle>Delete Recipe</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{recipe.title}"? This action cannot be undone.
+                Are you sure you want to delete &ldquo;{recipe.title}&rdquo;? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:gap-0">
