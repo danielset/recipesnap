@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Input } from "@/components/ui/input"
 import { Session } from '@supabase/supabase-js'
 import { PlusCircle } from 'lucide-react'
+import { Collections } from '@/components/Collections'
 
 interface Recipe {
   id: number
@@ -35,6 +36,7 @@ export function Page() {
   const [uniqueMealTypes, setUniqueMealTypes] = useState<string[]>([])
   const [uniqueCuisines, setUniqueCuisines] = useState<string[]>([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
 
   const fetchRecipes = useCallback(async (search?: string) => {
     try {
@@ -45,11 +47,27 @@ export function Page() {
         return
       }
 
-      const query = supabase
+      let query = supabase
         .from('recipes')
         .select('*')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
+
+      if (selectedCollection) {
+        const { data: collectionRecipes } = await supabase
+          .from('collection_recipes')
+          .select('recipe_id')
+          .eq('collection_id', selectedCollection)
+
+        if (collectionRecipes && collectionRecipes.length > 0) {
+          const recipeIds = collectionRecipes.map(cr => cr.recipe_id)
+          query = query.in('id', recipeIds)
+        } else {
+          setRecipes([])
+          setLoading(false)
+          return
+        }
+      }
 
       if (search) {
         const { data, error } = await query
@@ -82,9 +100,7 @@ export function Page() {
 
         setRecipes(filteredData)
       } else {
-        const filteredQuery = query
-
-        const { data, error } = await filteredQuery
+        const { data, error } = await query
         if (error) throw error
 
         let filteredData = data || []
@@ -110,7 +126,7 @@ export function Page() {
     } finally {
       setLoading(false)
     }
-  }, [toast, selectedMealType, selectedCuisine, showFavoritesOnly])
+  }, [toast, selectedMealType, selectedCuisine, showFavoritesOnly, selectedCollection])
 
   const updateFilterOptions = (recipes: Recipe[]) => {
     const mealTypes = new Set(recipes.map(recipe => recipe.meal_type).filter((type): type is string => !!type))
@@ -155,7 +171,7 @@ export function Page() {
         </div>
       ) : (
         <>
-          <div className="mb-6 flex flex-col lg:flex-row gap-4">
+          <div className="mb-2 flex flex-col lg:flex-row gap-4">
             {/* Search Input */}
             <Input
               type="search"
@@ -211,6 +227,32 @@ export function Page() {
                 Add New Recipe
               </Button>
             </Link>
+          </div>
+
+          {/* Collections Section */}
+          <div className="mb-2">
+            {/* Collections Component */}
+            <Collections 
+              selectedCollection={selectedCollection}
+              onCollectionSelect={setSelectedCollection}
+            />
+            
+            {/* Collection filter indicator */}
+            {selectedCollection && (
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  Filtering by collection
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedCollection(null)}
+                  className="h-8 px-2 text-[#3397F2]"
+                >
+                  Clear filter
+                </Button>
+              </div>
+            )}
           </div>
 
           {loading ? (
