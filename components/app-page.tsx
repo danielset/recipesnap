@@ -43,9 +43,7 @@ export function Page() {
   const [uniqueCuisines, setUniqueCuisines] = useState<string[]>([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
-  const [collections, setCollections] = useState<Collection[]>([]);
+  
 
   const fetchRecipes = useCallback(async (search?: string) => {
     try {
@@ -177,12 +175,6 @@ export function Page() {
         .eq('id', collectionId);
 
       if (error) throw error;
-
-      // Update local state immediately
-      setCollections(prevCollections => 
-        prevCollections.filter(c => c.id !== collectionId)
-      );
-      setSelectedCollection(null);
       
       // Refresh recipes
       await fetchRecipes(searchQuery);
