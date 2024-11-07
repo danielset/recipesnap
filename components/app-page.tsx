@@ -25,12 +25,6 @@ interface Recipe {
   is_favorite?: boolean
 }
 
-interface Collection {
-  id: string;
-  name: string;
-  // add other collection properties as needed
-}
-
 export function Page() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)

@@ -13,7 +13,7 @@ import { supabase } from '@/utils/supabase'
 interface Collection {
   id: string
   name: string
-  image_url?: string
+  image_url?: string | null
   recipe_count?: number
 }
 
@@ -23,6 +23,18 @@ interface CollectionsProps {
   onCollectionSelect: (collectionId: string | null) => void;
   showFavoritesOnly: boolean;
   onFavoritesToggle: () => void;
+}
+
+// Add interface for the collection data from Supabase
+interface CollectionData {
+  id: string;
+  name: string;
+  created_at: string;
+  collection_recipes?: {
+    recipe?: {
+      image_url?: string;
+    };
+  }[];
 }
 
 export function Collections({ 
@@ -64,8 +76,9 @@ export function Collections({
     }
 
     // Transform the data to get the first recipe's image for each collection
-    const collectionsWithImage: Collection[] = data.map((collection: any) => ({
-      ...collection,
+    const collectionsWithImage: Collection[] = (data as CollectionData[]).map((collection) => ({
+      id: collection.id,
+      name: collection.name,
       image_url: collection.collection_recipes?.[0]?.recipe?.image_url || null
     }))
 
