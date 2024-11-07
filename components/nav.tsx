@@ -8,6 +8,7 @@ import { useAuth } from '@/components/auth-provider'
 import { supabase } from '@/utils/supabase'
 import { useToast } from '@/components/ui/use-toast'
 import Image from 'next/image'
+import { LogIn, LogOut } from 'lucide-react'
 
 export function Nav() {
   const { user } = useAuth()
@@ -33,30 +34,35 @@ export function Nav() {
   return (
     <nav className="bg-[#3397F2] shadow">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between h-16 items-center">
-          <Link href="/" className="text-xl font-bold">
+        <div className="flex justify-between h-16 items-center relative">
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2 sm:static sm:translate-x-0">
             <Image 
               src="/logo_recipinny.svg" 
               alt="Recipinny" 
-              width={32}
-              height={32}
-              className="h-8 w-auto"
+              width={20}
+              height={20}
+              className="h-5 w-auto"
             />
           </Link>
-          <div className="flex items-center space-x-4">
+          <div className="ml-auto">
             {user ? (
-              <>
-                
-                <Button 
-                  variant="ghost" 
-                  onClick={handleSignOut}
-                >
-                  Sign Out
-                </Button>
-              </>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="text-white hover:bg-transparent"
+                size="icon"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
             ) : (
               <Link href="/auth/sign-in">
-                <Button>Sign In</Button>
+                <Button 
+                  variant="ghost"
+                  className="text-white hover:bg-transparent"
+                  size="icon"
+                >
+                  <LogIn className="h-5 w-5" />
+                </Button>
               </Link>
             )}
           </div>
