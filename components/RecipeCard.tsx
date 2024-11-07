@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Heart, Plus, Minus } from 'lucide-react'
@@ -79,7 +79,7 @@ const RecipeCard = ({
     }
   }
 
-  const fetchCollections = async () => {
+  const fetchCollections = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -100,7 +100,7 @@ const RecipeCard = ({
     if (recipeCollectionsData) {
       setRecipeCollections(recipeCollectionsData.map(rc => rc.collection_id))
     }
-  }
+  }, [id])
 
   const handleAddToCollections = async () => {
     setLoading(true)
@@ -181,7 +181,7 @@ const RecipeCard = ({
 
   useEffect(() => {
     fetchCollections()
-  }, [id])
+  }, [id, fetchCollections])
 
   useEffect(() => {
     setSelectedCollections(recipeCollections)
@@ -318,7 +318,7 @@ const RecipeCard = ({
                     }}
                     disabled={loading}
                   >
-                    Remove from "{collection.name}"
+                    Remove from &quot;{collection.name}&quot;
                   </Button>
                 ))
               }

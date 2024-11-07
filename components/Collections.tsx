@@ -232,7 +232,7 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
             <DialogTitle>Delete Collection</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Are you sure you want to delete "{collectionToDelete?.name}"? This action cannot be undone.
+            Are you sure you want to delete &quot;{collectionToDelete?.name}&quot;? This action cannot be undone.
           </p>
           <DialogFooter>
             <Button
