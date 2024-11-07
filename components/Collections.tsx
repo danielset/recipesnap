@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { PlusCircle, Trash2 } from 'lucide-react'
+import { PlusCircle, Trash2, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ import { supabase } from '@/utils/supabase'
 interface Collection {
   id: string
   name: string
-  image_url: string
+  image_url?: string
   recipe_count?: number
 }
 
@@ -21,13 +21,19 @@ interface Collection {
 interface CollectionsProps {
   selectedCollection: string | null;
   onCollectionSelect: (collectionId: string | null) => void;
+  showFavoritesOnly: boolean;
+  onFavoritesToggle: () => void;
 }
 
-export function Collections({ selectedCollection, onCollectionSelect }: CollectionsProps) {
+export function Collections({ 
+  selectedCollection, 
+  onCollectionSelect, 
+  showFavoritesOnly, 
+  onFavoritesToggle 
+}: CollectionsProps) {
   const [collections, setCollections] = useState<Collection[]>([])
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [newCollectionName, setNewCollectionName] = useState('')
-  const [newCollectionImage, setNewCollectionImage] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null)
@@ -40,9 +46,13 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
     const { data, error } = await supabase
       .from('collections')
       .select(`
-        *,
-        collection_recipes (
-          count
+        id,
+        name,
+        created_at,
+        collection_recipes!left (
+          recipe:recipes (
+            image_url
+          )
         )
       `)
       .eq('user_id', user.id)
@@ -53,13 +63,13 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
       return
     }
 
-    // Transform the data to include recipe_count
-    const collectionsWithCount = data.map(collection => ({
+    // Transform the data to get the first recipe's image for each collection
+    const collectionsWithImage: Collection[] = data.map((collection: any) => ({
       ...collection,
-      recipe_count: collection.collection_recipes?.[0]?.count || 0
+      image_url: collection.collection_recipes?.[0]?.recipe?.image_url || null
     }))
 
-    setCollections(collectionsWithCount)
+    setCollections(collectionsWithImage)
   }
 
   const handleCreateCollection = async () => {
@@ -70,29 +80,10 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      let imageUrl = null
-      if (newCollectionImage) {
-        const fileExt = newCollectionImage.name.split('.').pop()
-        const fileName = `${Math.random()}.${fileExt}`
-        
-        const { error: uploadError } = await supabase.storage
-          .from('collections')
-          .upload(fileName, newCollectionImage)
-
-        if (uploadError) throw uploadError
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('collections')
-          .getPublicUrl(fileName)
-
-        imageUrl = publicUrl
-      }
-
       const { error } = await supabase
         .from('collections')
         .insert([{
           name: newCollectionName,
-          image_url: imageUrl,
           user_id: user.id
         }])
 
@@ -105,7 +96,6 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
 
       setShowCreateDialog(false)
       setNewCollectionName('')
-      setNewCollectionImage(null)
       fetchCollections()
     } catch (error) {
       console.error('Error creating collection:', error)
@@ -175,11 +165,25 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
           <span className="text-sm mt-2 text-center">New Collection</span>
         </div>
 
+        {/* Favorites Filter Button */}
+        <div className="flex flex-col items-center min-w-[80px]">
+          <Button
+            variant="outline"
+            className={`w-[80px] h-[80px] rounded-full p-0 border-2 ${
+              showFavoritesOnly ? 'border-[#3397F2]' : 'border-primary'
+            }`}
+            onClick={onFavoritesToggle}
+          >
+            <Heart className={`h-8 w-8 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+          </Button>
+          <span className="text-sm mt-2 text-center">Favorites</span>
+        </div>
+
         {/* Collection Stories */}
         {collections.map((collection) => (
           <div 
             key={collection.id} 
-            className="flex flex-col items-center min-w-[80px] group relative"
+            className="flex flex-col items-center min-w-[80px]"
           >
             <div 
               className={`w-[80px] h-[80px] rounded-full overflow-hidden border-2 transition-colors ${
@@ -197,7 +201,7 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
                   alt={collection.name}
                   width={80}
                   height={80}
-                  className="object-cover"
+                  className="object-cover w-full h-full"
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -205,19 +209,6 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
                 </div>
               )}
             </div>
-            {/* Delete Button - appears on hover */}
-            <Button
-              variant="destructive"
-              size="icon"
-              className="absolute -top-1 -right-1 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation()
-                setCollectionToDelete(collection)
-                setShowDeleteDialog(true)
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
             <span className="text-sm mt-2 text-center truncate w-20">
               {collection.name}
             </span>
@@ -267,15 +258,6 @@ export function Collections({ selectedCollection, onCollectionSelect }: Collecti
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
                 placeholder="My Collection"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="image">Collection Image</Label>
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setNewCollectionImage(e.target.files?.[0] || null)}
               />
             </div>
             <Button

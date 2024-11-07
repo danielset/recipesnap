@@ -25,6 +25,12 @@ interface Recipe {
   is_favorite?: boolean
 }
 
+interface Collection {
+  id: string;
+  name: string;
+  // add other collection properties as needed
+}
+
 export function Page() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,6 +43,9 @@ export function Page() {
   const [uniqueCuisines, setUniqueCuisines] = useState<string[]>([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
 
   const fetchRecipes = useCallback(async (search?: string) => {
     try {
@@ -160,6 +169,38 @@ export function Page() {
     updateFilterOptions(recipes)
   }, [recipes])
 
+  const handleDeleteCollection = async (collectionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('collections')
+        .delete()
+        .eq('id', collectionId);
+
+      if (error) throw error;
+
+      // Update local state immediately
+      setCollections(prevCollections => 
+        prevCollections.filter(c => c.id !== collectionId)
+      );
+      setSelectedCollection(null);
+      
+      // Refresh recipes
+      await fetchRecipes(searchQuery);
+
+      toast({
+        title: "Success",
+        description: "Collection deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete collection",
+        variant: "destructive",
+      });
+    }
+  }
+
   return (
     <div className="container mx-auto p-4">
       {!session ? (
@@ -208,14 +249,6 @@ export function Page() {
                 </option>
                 ))}
               </select>
-
-              <Button
-                variant={showFavoritesOnly ? "default" : "outline"}
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                className="whitespace-nowrap h-10"
-              >
-                {showFavoritesOnly ? "★ Favorites Only" : "☆ Show All"}
-              </Button>
             </div>
 
             {/* Add Recipe Button */}
@@ -235,6 +268,8 @@ export function Page() {
             <Collections 
               selectedCollection={selectedCollection}
               onCollectionSelect={setSelectedCollection}
+              showFavoritesOnly={showFavoritesOnly}
+              onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
             />
             
             {/* Collection filter indicator */}
@@ -250,6 +285,18 @@ export function Page() {
                   className="h-8 px-2 text-[#3397F2]"
                 >
                   Clear filter
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedCollection) {
+                      handleDeleteCollection(selectedCollection);
+                    }
+                  }}
+                  className="h-8 px-2 text-red-500"
+                >
+                  Delete Collection
                 </Button>
               </div>
             )}
