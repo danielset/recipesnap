@@ -7,7 +7,7 @@ import { supabase } from '@/utils/supabase'
 import { useRouter } from 'next/navigation'
 import { useToast } from "@/components/ui/use-toast"
 import Image from 'next/image'
-import { Heart, HeartOff } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import {
   Dialog,
@@ -240,7 +240,7 @@ const RecipeDetailPage = ({ params }: { params: { id: string } }) => {
           {recipe.is_favorite ? (
             <Heart className="h-6 w-6 fill-red-500 text-red-500" />
           ) : (
-            <HeartOff className="h-6 w-6" />
+            <Heart className="h-6 w-6" />
           )}
         </Button>
       </div>
