@@ -298,13 +298,15 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(recipeData)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Failed to extract recipe';
     
     return NextResponse.json(
       { 
-        error: error.message || 'Failed to extract recipe',
-        details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
       },
       { status: 500 }
     )
