@@ -51,6 +51,8 @@ const AddRecipePage = () => {
   const [imageSourceUrl, setImageSourceUrl] = useState<string | null>(null)
   const [mealType, setMealType] = useState('')
   const [cuisine, setCuisine] = useState('')
+  const [showInstagramDialog, setShowInstagramDialog] = useState(false)
+  const [instagramUrl, setInstagramUrl] = useState('')
   const router = useRouter()
   const { toast } = useToast()
 
@@ -282,6 +284,54 @@ const AddRecipePage = () => {
     }
   }
 
+  const handleExtractFromInstagram = async () => {
+    if (!instagramUrl) return
+    
+    setIsExtracting(true)
+    try {
+      const formData = new FormData();
+      formData.append('url', instagramUrl);
+      formData.append('isInstagram', 'true');
+
+      const response = await fetch('/api/extract-recipe', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) throw new Error('Failed to extract recipe')
+
+      const data = await response.json()
+
+      setTitle(data.title || '')
+      setDescription(data.description || '')
+      setIngredients(data.ingredients?.join('\n') || '')
+      setSteps(data.steps?.join('\n') || '')
+      setMealType(data.meal_type || '')
+      setCuisine(data.cuisine || '')
+      
+      if (data.image_url) {
+        setImagePreview(data.image_url)
+        setExtractedImageUrl(data.image_url)
+        setImageSourceUrl(instagramUrl)
+      }
+
+      setShowInstagramDialog(false)
+      toast({
+        title: "Success!",
+        description: "Recipe extracted from Instagram post",
+      })
+    } catch (error) {
+      console.error('Error extracting recipe:', error)
+      toast({
+        title: "Error",
+        description: "Failed to extract recipe. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExtracting(false)
+    }
+  }
+
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -343,6 +393,14 @@ const AddRecipePage = () => {
           >
             Extract from Image
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowInstagramDialog(true)}
+            className="w-full sm:w-auto"
+          >
+            Extract from Instagram
+          </Button>
         </div>
       </div>
 
@@ -390,6 +448,31 @@ const AddRecipePage = () => {
                 className="w-full"
               >
                 {isExtracting ? 'Extracting...' : isConverting ? 'Converting...' : 'Extract'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showInstagramDialog} onOpenChange={setShowInstagramDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Extract Recipe from Instagram Post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="Enter Instagram post URL..."
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                disabled={isExtracting}
+                className="w-full"
+              />
+              <Button 
+                onClick={handleExtractFromInstagram}
+                disabled={!instagramUrl || isExtracting}
+              >
+                {isExtracting ? 'Extracting...' : 'Extract'}
               </Button>
             </div>
           </div>
